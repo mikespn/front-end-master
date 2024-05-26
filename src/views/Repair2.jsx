@@ -253,4 +253,127 @@ const Repairs = () => {
   const handleDateRangeSearchSubmit = () => {
     if (startDate && endDate) {
       if (startDate.isAfter(endDate)) {
-        setDateRange
+        setDateRangeError('Start date cannot be after end date.');
+      } else if (startDate.isSame(endDate)) {
+        setDateRangeError('Start date and end date cannot be the same.');
+      } else {
+        const filtered = repairs.filter((repair) =>
+          dayjs(repair.repairDate).isBetween(startDate, endDate, null, '[]')
+        );
+        setFilteredRepairs(filtered);
+        setDateRangeError('');
+        handleDateRangeSearchClose();
+      }
+    } else {
+      setFilteredRepairs(repairs);
+      handleDateRangeSearchClose();
+    }
+  };
+
+  const handleCloseError = () => {
+    setDateRangeError('');
+  };
+
+  if (loading) {
+    return <CircularProgress />;
+  }
+
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
+
+  return (
+    <Container>
+      <Typography
+        variant="h4"
+        component="h1"
+        gutterBottom
+        sx={{
+          fontWeight: 'bold',
+          color: '#1877F2',
+          marginBottom: '20px',
+          textAlign: 'center',
+        }}
+      >
+        Repairs
+      </Typography>
+      <Box
+        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}
+      >
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<Add />}
+          onClick={handleCreateOpen}
+          sx={{ backgroundColor: '#1877F2' }}
+        >
+          Create New Repair
+        </Button>
+        <RepairSearchBar
+          handleSearchOpen={handleSearchOpen}
+          handlePropertySearchOpen={handlePropertySearchOpen}
+          handleDateRangeSearchOpen={handleDateRangeSearchOpen}
+        />
+      </Box>
+      <RepairList
+        repairs={filteredRepairs}
+        handleUpdate={handleUpdateRepair}
+        handleDelete={handleDeleteRepair}
+        handleDeactivate={handleDeactivateRepair}
+        handleToggleActive={handleToggleActive}
+      />
+      <RepairDialog
+        open={openCreate}
+        onClose={handleCreateClose}
+        repairData={newRepair}
+        properties={properties}
+        handleChange={handleCreateChange}
+        handleDateChange={handleDateChange}
+        handleSubmit={handleCreateSubmit}
+      />
+      <RepairSearchDialog
+        open={openSearch}
+        onClose={handleSearchClose}
+        searchDate={searchDate}
+        handleSearchDateChange={handleSearchDateChange}
+        handleSearchSubmit={handleSearchSubmit}
+      />
+      <RepairPropertySearchDialog
+        open={openPropertySearch}
+        onClose={handlePropertySearchClose}
+        propertyId={propertyId}
+        handlePropertyIdChange={handlePropertyIdChange}
+        handlePropertySearchSubmit={handlePropertySearchSubmit}
+      />
+      <RepairDateRangeSearchDialog
+        open={openDateRangeSearch}
+        onClose={handleDateRangeSearchClose}
+        startDate={startDate}
+        endDate={endDate}
+        handleStartDateChange={handleStartDateChange}
+        handleEndDateChange={handleEndDateChange}
+        handleSearchSubmit={handleDateRangeSearchSubmit}
+        error={dateRangeError}
+        handleCloseError={handleCloseError}
+      />
+      <Dialog open={confirmDeactivate} onClose={handleConfirmDeactivateClose}>
+        <DialogTitle>Cannot Delete Repair</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            This repair cannot be deleted because it is not in PENDING status or is inactive. Would you like to deactivate it instead?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleConfirmDeactivateClose} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={() => handleDeactivateRepair(selectedRepair)} color="secondary">
+            Deactivate
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
+  );
+};
+
+export default Repairs;
